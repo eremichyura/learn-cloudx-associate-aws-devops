@@ -5,3 +5,55 @@
 aws_region_name = ""
 aws_access_key_id = ""
 aws_secret_key = ""
+
+#########################################################################
+#                              VPC                                      #
+#########################################################################
+
+#----------------------------  VPC  ------------------------------------#
+
+vpc_cidr_block = ""
+vpc_dns_support_enabled = true
+vpc_dns_hostnames_enabled = true
+vpc_tags = {
+  Name = ""
+}
+
+#-----------------------------  IGW  -----------------------------------#
+
+igw_tags = {
+  Name = "" 
+}
+
+#----------------------------SUBNETS -----------------------------------#
+
+####### subnet A
+
+subnet_public_a_cidr = ""
+subnet_public_a_az = ""
+subnet_public_a_tags = {
+  Name = ""
+}
+
+####### subnet B
+
+subnet_public_b_cidr = ""
+subnet_public_b_az = ""
+subnet_public_b_tags = {
+  Name = ""
+}
+
+####### subnet C
+
+subnet_public_c_cidr = ""
+subnet_public_c_az = ""
+subnet_public_c_tags = {
+  Name = ""
+}
+
+#----------------------  ROUTE TABLES  -------------------------------#
+
+public_rt_route_cidr = ""
+public_rt_tags = {
+  Name = ""
+}
