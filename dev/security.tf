@@ -1,4 +1,11 @@
 resource "aws_security_group" "cloudx_security_groups" {
+
+}
+
+
+/* from security branch
+
+resource "aws_security_group" "cloudx_security_groups" {
   count       = length(var.security_group_list)
   name        = var.security_group_list[count.index].sg_name
   vpc_id      = aws_vpc.cloudx_vpc.id
@@ -8,7 +15,7 @@ resource "aws_security_group" "cloudx_security_groups" {
   #  Name = element(element(var.security_groups,count.index),0)
   #})
 }
-
+*/
 locals {
   groups = { for s in aws_security_group.cloudx_security_groups : s.name => s.id }
   rules = {
