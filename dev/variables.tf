@@ -120,193 +120,44 @@ variable "public_rt_tags" {
 
 #-------------------------  SECURITY GROUPS  ---------------------------#
 
-/*
-variable "security_groups" {
-  description = "Security Group List to create"
-  type = list(tuple([string,string]))
-}
-*/
-/*
-security_group_rules = {
-  "bastion" = [
-    ["ingress","tcp","22","22",false,"149.34.244.153/32"],
-    ["ingress","tcp","80","80",true,"149.34.244.153/32"]
-  ]
-}
-*/
-#security_group_rules2 = map(map(tuple([string,string,string,string,bool,string])))
+variable "security_groups_with_rules" {
+  description = <<EOT
+  How to to set groups and rules:
 
-#variable "security_group_rules" {
-#
-#}
-
-/*
-
-security_group_list = [
-  {
-    sg_name        = "bastion",
-    sg_description = "allows access to bastion",
-    rules = [
-      {
-        type            = "ingress",
-        from_port       = "22",
-        to_port         = "22",
-        protocol        = "tcp",
-        isSecurityGroup = false
+    "sg_group_1_name" = {
+      description = "sg description",
+      sg_tags = {
+        tag_name = "tag value",
+        tag2_name = "tag 2 value",
+        ...etc
       },
-      {
-        type            = "ingress",
-        from_port       = "24",
-        to_port         = "24",
-        protocol        = "tcp"
-        isSecurityGroup = true
-      }
-    ]
-  }
-]
-
-*/
-
-variable "security_group_list" {
-  type = list(object(
-    {
-      sg_name        = string,
-      sg_description = string,
-      rules = list(object(
-        {
-          type            = string,
-          from_port       = string,
-          to_port         = string,
-          protocol        = string,
-          isSecurityGroup = bool,
-          sd_id           = optional(string),
-          cidr_block      = optional(string)
-        }
-      ))
+      rules = [
+        [rule_type,protocol,from_port,to_port,source_type,source],
+        [rule_type,protocol,from_port,to_port,source_type,source],
+        etc...
+      ]
     }
-  ))
-}
+    ...etc
 
-
-
-/*
-security_groups = [
-  {
-    sg_name = "bastion",
-    sg_description = "allows access to bastion"
-    rules = [
-      {
-        type = "ingress",
-        from_port = "22"
-      },
-      {
-        type = "ingress",
-        from_port = "24"
+  example:
+    "bastion" = {
+      description = "allows access to bastion",
+      sg_tags = {
+        Name = "bastion"
       }
-    ]
-  }
-]
+      rules = [
+        ["ingress", "tcp", "22", "22", "cidr", "195.56.119.209/32"],
+        ["egress", "-1", "0", "0", "cidr", "0.0.0.0/0"]
+      ]
+    }
+  EOT
 
-/*
-security_group_list = {
-  "bastion" = {
-    sg_description = "allows access to bastion"
-    rules = [
-      ["ingress","tcp","22","22",false,"149.34.244.153/32"],
-      ["ingress","tcp","80","80",false,"149.34.244.153/32"]
-    ]
-  }
+  type = map(
+    object({
+      description = string,
+      sg_tags     = map(string),
+      rules       = list(list(string))
+    })
+  )
 }
 
-
-/*
-for_each = {
-    for binding in flatten([
-      for role_name, groups in var.rbac_roles : [
-        for group in groups : [
-          for ns in group.namespaces : [
-            {
-              binding_name = lower("${ns}-${group.group_name}-${role_name}")
-              role         = role_name
-              group_id     = group.group_id
-              group_name   = group.group_name
-              ns           = ns
-            }
-          ]
-        ]
-  ]]) : binding.binding_name => binding }
-
-
-*/
-
-/*
-security_group_rules2 = {
-  "bastion" = {
-
-  }
-  #"bastion2 = "
-  }
-
-
-/*
-security_group_rules2 = {}
-
-*/
-
-
-
-
-
-
-/*
-security_group_list = {
-  "bastion" = {
-    sg_description = "allows access to bastion"
-    rules = [
-      ["ingress","tcp","22","22",false,"149.34.244.153/32"],
-      ["ingress","tcp","80","80",false,"149.34.244.153/32"]
-    ]
-  }
-}
-
-*/
-
-/*
-variable "security_group_rules" {
-  type = map(list(tuple([string,string,string,string,bool,string ]))) 
-}
-
-
-
-/*
-variable "security_group_list" {
-
-  type = map(object({
-              sg_description = string, 
-              rules = list(tuple([string,string,string,string,bool,string ]))
-            })
-          )
-  #type = map(string,list(tuple([string,string,string,string,bool,string ])))
-}
-
-
-
-
-  type = list(
-          object(
-            {
-              sg_name = string, 
-              sg_description = string, 
-              rules = list(tuple([string,string,string,string,bool,string ]))
-            }
-          )
-  ) 
-  #type = map(string,list(tuple([string,string,string,string,bool,string ])))
-}
-
-
-variable "security_group_bastion_ingress_rules" {
-  description = "List of ingress rules for bastiion sg"
-  type = map(list(string))
-}
-*/
