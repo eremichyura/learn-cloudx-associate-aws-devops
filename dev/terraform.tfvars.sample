@@ -76,4 +76,28 @@ security_groups_with_rules = {
       ["", "", "", "", "", ""]
     ]
   }
+   "" = {
+    description = "",
+    sg_tags = {
+      "" = "",
+      "" = ""
+    }
+    rules = [
+      ["", "", "", "", "", ""],
+      ["", "", "", "", "", ""]
+    ]
+  }
+}
+
+#--------------------------  SSH KEY PAIR  -----------------------------#
+
+ssh_public_key = {
+  name = ""
+  public_key = <<-EOF
+  put your key hear
+EOF
+  key_tags   = {
+    "" = "",
+    "" = ""    
+  }
 }

@@ -122,7 +122,7 @@ variable "public_rt_tags" {
 
 variable "security_groups_with_rules" {
   description = <<EOT
-  How to to set groups and rules:
+  How to set groups and rules:
 
     "sg_group_1_name" = {
       description = "sg description",
@@ -139,6 +139,15 @@ variable "security_groups_with_rules" {
     }
     ...etc
 
+    where source_type is from (sg, cidr)
+    sg - when source is another security group,
+    cider - when source is cidr block
+
+    source - depends on source_type:
+    cidr - then source is cidr block
+    sg - the source is anoter source group name
+
+
   example:
     "bastion" = {
       description = "allows access to bastion",
@@ -147,6 +156,16 @@ variable "security_groups_with_rules" {
       }
       rules = [
         ["ingress", "tcp", "22", "22", "cidr", "195.56.119.209/32"],
+        ["egress", "-1", "0", "0", "cidr", "0.0.0.0/0"]
+      ]
+    }
+    "efs" = {
+      description = "allows access to efs",
+      sg_tags = {
+        Name = "efs"
+      }
+      rules = [
+        ["ingress", "tcp", "22", "22", "sg", "bastion"],
         ["egress", "-1", "0", "0", "cidr", "0.0.0.0/0"]
       ]
     }
@@ -161,3 +180,14 @@ variable "security_groups_with_rules" {
   )
 }
 
+#-------------------------  SSH KEY PAIR  ---------------------------#
+
+variable "ssh_public_key" {
+  description = "SSH Public Key for access to EC2 instancess with ghost app"
+  type = object({
+    name       = string
+    public_key = string
+    key_tags   = map(string)
+  })
+  sensitive = true
+}
