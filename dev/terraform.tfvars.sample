@@ -127,3 +127,25 @@ iam_policy = {
     }
   }
 }
+
+#------------------------------  IAM ROLE  -----------------------------#
+
+iam_role = {
+  name        = ""
+  description = ""
+  path        = ""
+  role_tags = {
+    "" = ""
+  }
+  statements = {
+    "" = {
+      actions = [
+        ""
+      ]
+      principals = {
+        "" : ["",""]
+      }
+      effect = ""
+    }
+  }
+}

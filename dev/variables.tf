@@ -214,3 +214,22 @@ variable "iam_policy" {
     )
   })
 }
+
+#-----------------------------  IAM ROLE  ------------------------------#
+
+variable "iam_role" {
+  description = "IAM Role"
+  type = object({
+    name        = string
+    description = string
+    path        = string
+    role_tags   = map(string)
+    statements = map(
+      object({
+        actions    = list(string)
+        principals = map(list(string))
+        effect     = string
+      })
+    )
+  })
+}
