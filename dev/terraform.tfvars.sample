@@ -149,3 +149,12 @@ iam_role = {
     }
   }
 }
+
+#-----------------------  INSTANCE PROFILE  ----------------------------#
+
+instance_profile = {
+  Name = ""
+  tags = {
+    "" = ""
+  }
+}

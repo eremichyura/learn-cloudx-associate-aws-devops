@@ -233,3 +233,12 @@ variable "iam_role" {
     )
   })
 }
+
+#-----------------------  INSTANCE PROFILE  ----------------------------#
+variable "instance_profile" {
+  description = "Intsnace porfile"
+  type = object({
+    Name = string
+    tags = map(string)
+  })
+}
