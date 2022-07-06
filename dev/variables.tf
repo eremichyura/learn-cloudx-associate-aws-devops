@@ -191,3 +191,26 @@ variable "ssh_public_key" {
   })
   sensitive = true
 }
+
+#########################################################################
+#                              IAM                                      #
+#########################################################################
+
+#-----------------------------  IAM POLICY -----------------------------#
+
+variable "iam_policy" {
+  description = "IAM policy with statements"
+  type = object({
+    name        = string
+    path        = string
+    description = string
+    policy_tags = map(string)
+    statements = map(
+      object({
+        actions   = list(string)
+        resources = list(string)
+        effect    = string
+      })
+    )
+  })
+}
