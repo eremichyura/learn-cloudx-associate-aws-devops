@@ -242,3 +242,15 @@ variable "instance_profile" {
     tags = map(string)
   })
 }
+
+
+#########################################################################
+#                              EFS                                      #
+#########################################################################
+
+variable "efs" {
+  description = "Elastic File System"
+  type = object({
+    tags = map(string)
+  })
+}
