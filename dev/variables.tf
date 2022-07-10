@@ -254,3 +254,47 @@ variable "efs" {
     tags = map(string)
   })
 }
+
+#########################################################################
+#                              ALB                                      #
+#########################################################################
+
+#----------------------------  ALB  ------------------------------------#
+
+variable "alb" {
+  description = "Aplication Load Balancer"
+  type = object({
+    alb_security_group_name = string
+    name                    = string
+    load_balancer_type      = string
+    internal                = bool
+    tags                    = map(string)
+  })
+}
+
+
+#------------------------  TARGET_GROUP  -------------------------------#
+
+variable "alb_target_group" {
+  description = "ALB target group"
+  type = object({
+    name     = string
+    port     = string
+    protocol = string
+    tags     = map(string)
+  })
+}
+
+
+#------------------------  ALB_LISTENER  -------------------------------#
+
+variable "alb_listener" {
+  description = "ALB listener"
+  type = object({
+    port                  = string
+    protocol              = string
+    default_action_type   = string
+    default_action_weight = number
+    tags                  = map(string)
+  })
+}
