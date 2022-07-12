@@ -13,8 +13,8 @@ aws_secret_key = ""
 #----------------------------  VPC  ------------------------------------#
 
 vpc_cidr_block = ""
-vpc_dns_support_enabled = true
-vpc_dns_hostnames_enabled = true
+vpc_dns_support_enabled = true/false
+vpc_dns_hostnames_enabled = true/false
 vpc_tags = {
   Name = ""
 }
@@ -94,8 +94,8 @@ security_groups_with_rules = {
 ssh_public_key = {
   name = ""
   public_key = <<-EOF
-  put your key hear
-EOF
+    put your key hear
+    EOF
   key_tags   = {
     "" = "",
     "" = ""    
@@ -200,9 +200,37 @@ alb_target_group = {
 alb_listener = {
   port                      = ""
   protocol                  = ""
-   default_action_priority  = number
+   default_action_priority  = put here number 
   default_action_type       = ""
   tags = {
     "" = ""
   }
+}
+
+#########################################################################
+#                              ASG                                      #
+#########################################################################
+
+#-------------------------  LAUNCH TEMPLATE  ---------------------------#
+
+launch_template = {
+  name                                           = ""
+  instance_type                                  = ""
+  image_id                                       = ""
+  instance_initiated_shutdown_behavior           = ""
+  network_interfaces_associate_public_ip_address = true/false
+  network_interfaces_ec2_pool_name               = ""
+  network_interfaces_device_index                = number
+}
+
+#------------------------------  ASG  ----------------------------------#
+
+asg = {
+  name                    = ""
+  capacity_rebalance      = false/true
+  desired_capacity        = number
+  max_size                = number
+  min_size                = number
+  health_check_type       = ""
+  launch_template_version = ""
 }

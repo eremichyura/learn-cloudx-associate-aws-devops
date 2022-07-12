@@ -1,0 +1,61 @@
+#!/bin/bash -xe
+
+exec > >(tee /var/log/cloud-init-output.log | logger -t user-data -s 2>/dev/console) 2>&1
+
+### Install pre-reqs
+yum install -y jq
+yum install -y mc
+curl -sL https://rpm.nodesource.com/setup_14.x | sudo bash -
+yum install -y nodejs amazon-efs-utils
+npm install ghost-cli@latest -g
+
+adduser ghost_user
+usermod -aG wheel ghost_user
+cd /home/ghost_user
+sudo -u ghost_user ghost install local
+
+LB='alb-cloudx'
+REGION=$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/[a-z]$//')
+EFS_ID=$(aws efs describe-file-systems --query 'FileSystems[?Name==`ghost_content`].FileSystemId' --region $REGION --output text)
+LB_DNS_NAME=$(aws elbv2 describe-load-balancers --region $REGION --names $LB | jq -r '.LoadBalancers[].DNSName')
+
+mkdir -p /home/ghost_user/ghost_content
+sleep 90s
+mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport $EFS_ID.efs.$REGION.amazonaws.com:/ /home/ghost_user/ghost_content
+
+[ -z "$(ls /home/ghost_user/ghost_content)" ] && cp -r /home/ghost_user/content/* /home/ghost_user/ghost_content || echo "Not empty"
+
+cat <<EOF >config.development.json
+
+{
+  "url": "http://${LB_DNS_NAME}",
+  "server": {
+    "port": 2368,
+    "host": "0.0.0.0"
+  },
+  "database": {
+    "client": "sqlite3",
+    "connection": {
+      "filename": "/home/ghost_user/ghost_content/data/ghost-local.db"
+    }
+  },
+  "mail": {
+    "transport": "Direct"
+  },
+  "logging": {
+    "transports": [
+      "file",
+      "stdout"
+    ]
+  },
+  "process": "local",
+  "paths": {
+    "contentPath": "/home/ghost_user/ghost_content"
+  }
+}
+EOF
+
+find /home/ghost_user/ghost_content -exec chown ghost_user:ghost_user {} \;
+
+sudo -u ghost_user ghost stop
+sudo -u ghost_user ghost start

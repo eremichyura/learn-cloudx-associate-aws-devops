@@ -10,16 +10,19 @@ variable "aws_region_name" {
 variable "aws_access_key_id" {
   description = "AWS access key ID"
   type        = string
+  sensitive   = true
 }
 
 variable "aws_secret_key" {
   description = "AWS secret key"
   type        = string
+  sensitive   = true
 }
 
 variable "common_project_tags" {
   description = "Common tags that used to identify project end enviroment"
   type        = map(string)
+  sensitive   = true
 }
 
 #########################################################################
@@ -251,7 +254,8 @@ variable "instance_profile" {
 variable "efs" {
   description = "Elastic File System"
   type = object({
-    tags = map(string)
+    security_group_name = string
+    tags                = map(string)
   })
 }
 
@@ -296,5 +300,38 @@ variable "alb_listener" {
     default_action_type   = string
     default_action_weight = number
     tags                  = map(string)
+  })
+}
+
+#########################################################################
+#                              ASG                                      #
+#########################################################################
+
+#-------------------------  LAUNCH TEMPLATE  ---------------------------#
+
+variable "launch_template" {
+  description = "Launch template"
+  type = object({
+    name                                           = string
+    instance_type                                  = string
+    image_id                                       = string
+    instance_initiated_shutdown_behavior           = string
+    network_interfaces_associate_public_ip_address = bool
+    network_interfaces_ec2_pool_name               = string
+    network_interfaces_device_index                = number
+  })
+}
+
+#------------------------------  ASG  ----------------------------------#
+variable "asg" {
+  description = "Auto Scaling Group"
+  type = object({
+    name                    = string
+    capacity_rebalance      = bool
+    desired_capacity        = number
+    max_size                = number
+    min_size                = number
+    health_check_type       = string
+    launch_template_version = string
   })
 }
