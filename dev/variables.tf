@@ -22,7 +22,6 @@ variable "aws_secret_key" {
 variable "common_project_tags" {
   description = "Common tags that used to identify project end enviroment"
   type        = map(string)
-  sensitive   = true
 }
 
 #########################################################################
@@ -333,5 +332,21 @@ variable "asg" {
     min_size                = number
     health_check_type       = string
     launch_template_version = string
+  })
+}
+
+#########################################################################
+#                              BASTION                                  #
+#########################################################################
+
+variable "bastion_ec2" {
+  description = "Bastion EC2"
+  type = object({
+    instance_type               = string
+    image_id                    = string
+    monitoring                  = bool
+    associate_public_ip_address = bool
+    bastion_sg_name             = string
+    tags                        = map(string)
   })
 }

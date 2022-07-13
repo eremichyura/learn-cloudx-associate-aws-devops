@@ -234,3 +234,18 @@ asg = {
   health_check_type       = ""
   launch_template_version = ""
 }
+
+#########################################################################
+#                              BASTION                                  #
+#########################################################################
+
+bastion_ec2 = {
+  instance_type               = ""
+  image_id                    = ""
+  monitoring                  = false/true
+  associate_public_ip_address = true/false
+  bastion_sg_name             = string
+  tags = {
+    "" = ""
+  }
+}
