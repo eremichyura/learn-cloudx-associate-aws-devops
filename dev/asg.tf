@@ -3,9 +3,20 @@
 #########################################################################
 
 #-----------------------  CLOUD INIT CONFIG  ---------------------------#
+locals {
 
+  script_template = templatefile("${path.root}/install.tftpl", {
+    SSM_DB_PASSWORD = var.ssm_db_password_paramname
+    SSM_DB_USER     = var.ssm_db_user_paramname
+    LB              = var.alb.name
+    DB_NAME         = var.mysql_database_name
+    DB_URL          = "${aws_db_instance.cloudx_ghost_mysql.address}"
+  })
+}
 
 data "cloudinit_config" "cloud_init" {
+  gzip          = false
+  base64_encode = true
   part {
     content_type = "text/cloud-config"
     content = yamlencode({
@@ -24,9 +35,11 @@ data "cloudinit_config" "cloud_init" {
       ]
     })
   }
+
   part {
+    filename     = "init-shellscript"
     content_type = "text/x-shellscript"
-    content      = file("${path.root}/install.sh")
+    content      = local.script_template
   }
 }
 

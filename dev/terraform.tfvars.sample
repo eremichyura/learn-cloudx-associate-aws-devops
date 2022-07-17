@@ -51,11 +51,45 @@ subnet_public_c_tags = {
   Name = ""
 }
 
+database_subnets = [
+  {
+    availability_zone = ""
+    cidr_block        = ""
+    name              = ""
+    tags = {
+      "" = ""
+    }
+  },
+  {
+    availability_zone = ""
+    cidr_block        = ""
+    name              = ""
+    tags = {
+      "" = ""
+    }
+  },
+  {
+    availability_zone = ""
+    cidr_block        = ""
+    name              = ""
+    tags = {
+      "Name" = ""
+    }
+  }
+]
+
+
 #----------------------  ROUTE TABLES  -------------------------------#
 
 public_rt_route_cidr = ""
+
 public_rt_tags = {
   Name = ""
+}
+
+
+database_private_route_table_tags = {
+  "" = ""
 }
 
 #########################################################################
@@ -245,6 +279,48 @@ bastion_ec2 = {
   monitoring                  = false/true
   associate_public_ip_address = true/false
   bastion_sg_name             = string
+  tags = {
+    "" = ""
+  }
+}
+
+#########################################################################
+#                                 RDS                                   #
+#########################################################################
+
+ssm_db_password_paramname             = ""
+ssm_db_password_paramname_description = ""
+ssm_db_password_paramname_tags = {
+  "" = ""
+}
+
+ssm_db_user_paramname             = ""
+ssm_db_user_paramname_description = ""
+ssm_db_user_paramname_tags = {
+  "" = ""
+}
+
+ghost_mysql_db_subnet_group = {
+  description = ""
+  name        = ""
+  tags = {
+    "" = ""
+  }
+}
+
+mysql_db_security_group_name = ""
+
+
+mysql_database_name     = ""
+mysql_database_password = ""
+mysql_database_user     = ""
+
+rds_db_instantce_params = {
+  allocated_storage = number
+  storage_type      = ""
+  engine            = ""
+  engine_version    = ""
+  instance_class    = ""
   tags = {
     "" = ""
   }

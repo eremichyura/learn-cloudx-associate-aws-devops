@@ -104,6 +104,17 @@ variable "subnet_public_c_tags" {
   type        = map(string)
 }
 
+variable "database_subnets" {
+  description = ""
+  type = list(object({
+    name              = string
+    cidr_block        = string
+    availability_zone = string
+    tags              = map(string)
+    })
+  )
+}
+
 #----------------------  ROUTE TABLES  -------------------------------#
 
 variable "public_rt_route_cidr" {
@@ -113,6 +124,11 @@ variable "public_rt_route_cidr" {
 
 variable "public_rt_tags" {
   description = "Tags for public route table"
+  type        = map(string)
+}
+
+variable "database_private_route_table_tags" {
+  description = "Private route table for database"
   type        = map(string)
 }
 
@@ -348,5 +364,86 @@ variable "bastion_ec2" {
     associate_public_ip_address = bool
     bastion_sg_name             = string
     tags                        = map(string)
+  })
+}
+
+
+#########################################################################
+#                                 RDS                                   #
+#########################################################################
+
+variable "ssm_db_password_paramname" {
+  description = "Name of ghost db password parameter in SSM"
+  type        = string
+}
+
+variable "ssm_db_password_paramname_description" {
+  description = "Description for ghost db password parameter in SSM"
+  type        = string
+}
+
+variable "ssm_db_password_paramname_tags" {
+  description = "Tags for ghost db password parameter in SSM"
+  type        = map(string)
+}
+
+
+variable "ssm_db_user_paramname" {
+  description = "Name of ghost db user parameter in SSM"
+  type        = string
+}
+
+variable "ssm_db_user_paramname_description" {
+  description = "Description for ghost db user parameter in SSM"
+  type        = string
+}
+
+variable "ssm_db_user_paramname_tags" {
+  description = "Tags for ghost db user parameter in SSM"
+  type        = map(string)
+}
+
+
+variable "ghost_mysql_db_subnet_group" {
+  description = "Params for MYSQL DB subnet group"
+  type = object({
+    description = string
+    name        = string
+    tags        = map(string)
+  })
+}
+
+variable "mysql_db_security_group_name" {
+  description = "Name of mysql DB Security Group"
+  type        = string
+}
+
+variable "mysql_database_name" {
+  description = "Name of Ghost DB"
+  type        = string
+}
+
+variable "mysql_database_password" {
+  description = "value"
+  type        = string
+  sensitive   = true
+}
+
+variable "mysql_database_user" {
+  description = "value"
+  type        = string
+  sensitive   = true
+}
+
+variable "rds_db_instantce_params" {
+  description = "Params for RDS DB instance"
+  type = object(
+    {
+      allocated_storage = number
+      storage_type      = string
+      engine            = string
+      engine_version    = string
+      instance_class    = string
+      tags              = map(string)
   })
 }

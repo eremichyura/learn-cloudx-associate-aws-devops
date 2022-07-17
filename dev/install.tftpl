@@ -14,29 +14,36 @@ usermod -aG wheel ghost_user
 cd /home/ghost_user
 sudo -u ghost_user ghost install local
 
-LB='alb-cloudx'
 REGION=$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/[a-z]$//')
-EFS_ID=$(aws efs describe-file-systems --query 'FileSystems[?Name==`ghost_content`].FileSystemId' --region $REGION --output text)
-LB_DNS_NAME=$(aws elbv2 describe-load-balancers --region $REGION --names $LB | jq -r '.LoadBalancers[].DNSName')
+
+DB_PASSWORD=$(aws ssm get-parameter --name "${SSM_DB_PASSWORD}" --query Parameter.Value --with-decryption --region "$REGION" --output text)
+DB_USER=$(aws ssm get-parameter --name "${SSM_DB_USER}" --query Parameter.Value --with-decryption --region "$REGION" --output text)
+
+EFS_ID=$(aws efs describe-file-systems --query 'FileSystems[?Name==`ghost_content`].FileSystemId' --region "$REGION" --output text)
+LB_DNS_NAME=$(aws elbv2 describe-load-balancers --region "$REGION" --names "${LB}" | jq -r '.LoadBalancers[].DNSName')
 
 mkdir -p /home/ghost_user/ghost_content
 sleep 90s
-mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport $EFS_ID.efs.$REGION.amazonaws.com:/ /home/ghost_user/ghost_content
+mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport "$EFS_ID".efs."$REGION".amazonaws.com:/ /home/ghost_user/ghost_content
 
 [ -z "$(ls /home/ghost_user/ghost_content)" ] && cp -r /home/ghost_user/content/* /home/ghost_user/ghost_content || echo "Not empty"
 
 cat <<EOF >config.development.json
 
 {
-  "url": "http://${LB_DNS_NAME}",
+  "url": "http://$LB_DNS_NAME",
   "server": {
     "port": 2368,
     "host": "0.0.0.0"
   },
   "database": {
-    "client": "sqlite3",
+    "client": "mysql",
     "connection": {
-      "filename": "/home/ghost_user/ghost_content/data/ghost-local.db"
+      "host": "${DB_URL}",
+      "port": 3306,
+      "user": "$DB_USER",
+      "password": "$DB_PASSWORD",
+      "database": "${DB_NAME}"
     }
   },
   "mail": {
