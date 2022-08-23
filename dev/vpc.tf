@@ -39,6 +39,15 @@ resource "aws_subnet" "databases" {
   tags              = merge(var.common_project_tags, var.database_subnets[count.index].tags)
 }
 
+resource "aws_subnet" "ecs_privates" {
+  count = length(var.ecs_private_subnets)
+
+  vpc_id            = aws_vpc.cloudx_vpc.id
+  cidr_block        = var.ecs_private_subnets[count.index].cidr_block
+  availability_zone = var.ecs_private_subnets[count.index].availability_zone
+  tags              = merge(var.common_project_tags, var.ecs_private_subnets[count.index].tags)
+}
+
 #---------------------------  IGW  -----------------------------------#
 
 resource "aws_internet_gateway" "cloudx_igw" {
@@ -75,11 +84,11 @@ resource "aws_route_table_association" "cloudx_public_rt_association_c" {
   subnet_id      = aws_subnet.cloudx_subnet_public_c.id
 }
 
-
 resource "aws_route_table" "cloudx_database_private" {
   vpc_id = aws_vpc.cloudx_vpc.id
   depends_on = [
-    aws_subnet.databases
+    aws_subnet.databases,
+    aws_internet_gateway.cloudx_igw
   ]
   tags = merge(var.common_project_tags, var.database_private_route_table_tags)
 }
@@ -89,4 +98,11 @@ resource "aws_route_table_association" "cloudx_private_databases" {
 
   route_table_id = aws_route_table.cloudx_database_private.id
   subnet_id      = aws_subnet.databases[count.index].id
+}
+
+resource "aws_route_table_association" "cloudx_private_ecs" {
+  count = length(var.ecs_private_subnets)
+
+  route_table_id = aws_route_table.cloudx_database_private.id
+  subnet_id      = aws_subnet.ecs_privates[count.index].id
 }

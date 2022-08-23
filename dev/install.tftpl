@@ -3,6 +3,7 @@
 exec > >(tee /var/log/cloud-init-output.log | logger -t user-data -s 2>/dev/console) 2>&1
 
 ### Install pre-reqs
+
 yum install -y jq
 yum install -y mc
 curl -sL https://rpm.nodesource.com/setup_14.x | sudo bash -
@@ -12,24 +13,17 @@ npm install ghost-cli@latest -g
 adduser ghost_user
 usermod -aG wheel ghost_user
 cd /home/ghost_user
-sudo -u ghost_user ghost install local
+sudo -u ghost_user ghost install "${GHOST_IMAGE_TAG}" --local --development --no-setup-migrate
 
 REGION=$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/[a-z]$//')
-
-DB_PASSWORD=$(aws ssm get-parameter --name "${SSM_DB_PASSWORD}" --query Parameter.Value --with-decryption --region "$REGION" --output text)
-DB_USER=$(aws ssm get-parameter --name "${SSM_DB_USER}" --query Parameter.Value --with-decryption --region "$REGION" --output text)
-
 EFS_ID=$(aws efs describe-file-systems --query 'FileSystems[?Name==`ghost_content`].FileSystemId' --region "$REGION" --output text)
 LB_DNS_NAME=$(aws elbv2 describe-load-balancers --region "$REGION" --names "${LB}" | jq -r '.LoadBalancers[].DNSName')
 
 mkdir -p /home/ghost_user/ghost_content
-sleep 90s
 mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport "$EFS_ID".efs."$REGION".amazonaws.com:/ /home/ghost_user/ghost_content
-
-[ -z "$(ls /home/ghost_user/ghost_content)" ] && cp -r /home/ghost_user/content/* /home/ghost_user/ghost_content || echo "Not empty"
+sudo -u ghost_user ghost stop
 
 cat <<EOF >config.development.json
-
 {
   "url": "http://$LB_DNS_NAME",
   "server": {
@@ -41,8 +35,8 @@ cat <<EOF >config.development.json
     "connection": {
       "host": "${DB_URL}",
       "port": 3306,
-      "user": "$DB_USER",
-      "password": "$DB_PASSWORD",
+      "user": "${DB_USER}",
+      "password": "${DB_PASSWORD}",
       "database": "${DB_NAME}"
     }
   },
@@ -62,7 +56,17 @@ cat <<EOF >config.development.json
 }
 EOF
 
+if [ -z "$(ls '/home/ghost_user/ghost_content')" ]; then
+  cp -r /home/ghost_user/content/* /home/ghost_user/ghost_content
+  rm /home/ghost_user/ghost_content/themes/casper
+  cp -r /home/ghost_user/versions/"${GHOST_IMAGE_TAG}"/content/themes/casper /home/ghost_user/ghost_content/themes
+fi
+
+if [ -L /home/ghost_user/ghost_content/themes/casper ]; then
+  rm /home/ghost_user/ghost_content/themes/casper
+  cp -r /home/ghost_user/versions/"${GHOST_IMAGE_TAG}"/content/themes/casper/ /home/ghost_user/ghost_content/themes/
+fi
+
 find /home/ghost_user/ghost_content -exec chown ghost_user:ghost_user {} \;
 
-sudo -u ghost_user ghost stop
-sudo -u ghost_user ghost start
+sudo -u ghost_user ghost start --development

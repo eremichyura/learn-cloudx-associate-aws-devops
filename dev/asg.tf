@@ -6,11 +6,12 @@
 locals {
 
   script_template = templatefile("${path.root}/install.tftpl", {
-    SSM_DB_PASSWORD = var.ssm_db_password_paramname
-    SSM_DB_USER     = var.ssm_db_user_paramname
-    LB              = var.alb.name
-    DB_NAME         = var.mysql_database_name
+    DB_NAME         = jsondecode(data.aws_secretsmanager_secret_version.rds_creds.secret_string).database_name
+    DB_PASSWORD     = jsondecode(data.aws_secretsmanager_secret_version.rds_creds.secret_string).database_password
+    DB_USER         = jsondecode(data.aws_secretsmanager_secret_version.rds_creds.secret_string).database_user
     DB_URL          = "${aws_db_instance.cloudx_ghost_mysql.address}"
+    LB              = var.alb.name
+    GHOST_IMAGE_TAG = "${var.ghost_image_tag}"
   })
 }
 
@@ -71,15 +72,14 @@ resource "aws_autoscaling_group" "cloudx_asg" {
   desired_capacity   = var.asg.desired_capacity
   max_size           = var.asg.max_size
   min_size           = var.asg.min_size
-  health_check_type  = var.asg.health_check_type
 
-  target_group_arns   = [aws_lb_target_group.cloudx_alb_target_group.arn]
-  vpc_zone_identifier = [aws_subnet.cloudx_subnet_public_a.id, aws_subnet.cloudx_subnet_public_b.id, aws_subnet.cloudx_subnet_public_c.id]
+  health_check_type         = var.asg.health_check_type
+  health_check_grace_period = 600
+  target_group_arns         = [aws_lb_target_group.cloudx_alb_target_group.arn]
+  vpc_zone_identifier       = [aws_subnet.cloudx_subnet_public_a.id, aws_subnet.cloudx_subnet_public_b.id, aws_subnet.cloudx_subnet_public_c.id]
 
   launch_template {
     id      = aws_launch_template.cloudx_ec2_launch_template.id
     version = var.asg.launch_template_version
   }
 }
-
-

@@ -24,6 +24,17 @@ variable "common_project_tags" {
   type        = map(string)
 }
 
+variable "docker_host" {
+  description = "Docker host"
+  type        = string
+}
+
+variable "docker_registry_auth" {
+  description = "Creds for docker hub registry"
+  type        = map(string)
+  sensitive   = true
+}
+
 #########################################################################
 #                               VPC                                     #
 #########################################################################
@@ -115,6 +126,17 @@ variable "database_subnets" {
   )
 }
 
+variable "ecs_private_subnets" {
+  description = ""
+  type = list(object({
+    name              = string
+    cidr_block        = string
+    availability_zone = string
+    tags              = map(string)
+    })
+  )
+}
+
 #----------------------  ROUTE TABLES  -------------------------------#
 
 variable "public_rt_route_cidr" {
@@ -131,6 +153,16 @@ variable "database_private_route_table_tags" {
   description = "Private route table for database"
   type        = map(string)
 }
+
+#########################################################################
+#                           VPC ENDPOINTS                               #
+#########################################################################
+
+
+
+
+
+
 
 #########################################################################
 #                           SECURITY                                    #
@@ -233,10 +265,49 @@ variable "iam_policy" {
   })
 }
 
+variable "iam_ecr_policy" {
+  description = "IAM policy for Ghost ECR"
+  type        = string
+}
+
+variable "iam_ecs_policy" {
+  description = "IAM policy with statements for ECS"
+  type = object({
+    name        = string
+    path        = string
+    description = string
+    policy_tags = map(string)
+    statements = map(
+      object({
+        actions   = list(string)
+        resources = list(string)
+        effect    = string
+      })
+    )
+  })
+}
+
 #-----------------------------  IAM ROLE  ------------------------------#
 
 variable "iam_role" {
   description = "IAM Role"
+  type = object({
+    name        = string
+    description = string
+    path        = string
+    role_tags   = map(string)
+    statements = map(
+      object({
+        actions    = list(string)
+        principals = map(list(string))
+        effect     = string
+      })
+    )
+  })
+}
+
+variable "iam_ecs_role" {
+  description = "IAM Role for ECS"
   type = object({
     name        = string
     description = string
@@ -261,6 +332,14 @@ variable "instance_profile" {
   })
 }
 
+variable "instance_ecs_profile" {
+  description = "Intsnace ecs porfile"
+  type = object({
+    Name = string
+    tags = map(string)
+  })
+
+}
 
 #########################################################################
 #                              EFS                                      #
@@ -304,6 +383,15 @@ variable "alb_target_group" {
   })
 }
 
+variable "alb_target_group_ecs" {
+  description = "ALB target group for ECS"
+  type = object({
+    name     = string
+    port     = string
+    protocol = string
+    tags     = map(string)
+  })
+}
 
 #------------------------  ALB_LISTENER  -------------------------------#
 
@@ -372,37 +460,11 @@ variable "bastion_ec2" {
 #                                 RDS                                   #
 #########################################################################
 
-variable "ssm_db_password_paramname" {
-  description = "Name of ghost db password parameter in SSM"
-  type        = string
-}
-
-variable "ssm_db_password_paramname_description" {
-  description = "Description for ghost db password parameter in SSM"
-  type        = string
-}
-
-variable "ssm_db_password_paramname_tags" {
-  description = "Tags for ghost db password parameter in SSM"
+variable "rds_creds" {
+  description = "Creds params form RDS"
   type        = map(string)
+  sensitive   = true
 }
-
-
-variable "ssm_db_user_paramname" {
-  description = "Name of ghost db user parameter in SSM"
-  type        = string
-}
-
-variable "ssm_db_user_paramname_description" {
-  description = "Description for ghost db user parameter in SSM"
-  type        = string
-}
-
-variable "ssm_db_user_paramname_tags" {
-  description = "Tags for ghost db user parameter in SSM"
-  type        = map(string)
-}
-
 
 variable "ghost_mysql_db_subnet_group" {
   description = "Params for MYSQL DB subnet group"
@@ -418,23 +480,6 @@ variable "mysql_db_security_group_name" {
   type        = string
 }
 
-variable "mysql_database_name" {
-  description = "Name of Ghost DB"
-  type        = string
-}
-
-variable "mysql_database_password" {
-  description = "value"
-  type        = string
-  sensitive   = true
-}
-
-variable "mysql_database_user" {
-  description = "value"
-  type        = string
-  sensitive   = true
-}
-
 variable "rds_db_instantce_params" {
   description = "Params for RDS DB instance"
   type = object(
@@ -445,5 +490,87 @@ variable "rds_db_instantce_params" {
       engine_version    = string
       instance_class    = string
       tags              = map(string)
+  })
+}
+
+#########################################################################
+#                                 ECR                                   #
+#########################################################################
+
+variable "ghost_image_name" {
+  description = "Name of Ghost image to use"
+  type        = string
+}
+variable "ghost_image_tag" {
+  description = "Tag of ghoste image"
+  type        = string
+}
+
+variable "aws_image_repository" {
+  description = "Params for AWS image repository"
+  type = object(
+    {
+      name                 = string
+      scan_on_push         = bool
+      image_tag_mutability = string
+      encryption_type      = string
+      tags                 = map(string)
+    }
+  )
+}
+
+#########################################################################
+#                                 ECS                                   #
+#########################################################################
+
+variable "ghost_ecs_cluster" {
+  description = "Ghost ECS Cluster params"
+  type = object({
+    name          = string
+    setting_name  = string
+    setting_value = string
+  })
+}
+variable "ghost_ecs_service" {
+  description = "Ghost ECS Service params"
+  type = object({
+    name                                 = string
+    launch_type                          = string
+    desired_count                        = number
+    health_check_grace_period_seconds    = number
+    wait_for_steady_state                = bool
+    load_balancer_container_name         = string
+    load_balancer_container_port         = number
+    network_configuration_security_group = string
+    assign_public_ip                     = bool
+  })
+}
+variable "ghost_ecs_container_def" {
+  description = "Hgost ECS container deffinitions"
+  type = object({
+    name                                   = string
+    essential                              = bool
+    environment_database__client           = string
+    environment_NODE_ENV                   = string
+    portMappings_protocol                  = string
+    portMappings_containerPort             = number
+    mountPoints_containerPath              = string
+    mountPoints_sourceVolume               = string
+    logConfiguration_logDriver             = string
+    logConfiguration_awslogs-stream-prefix = string
+  })
+}
+
+variable "ghost_ecs_task_def" {
+  description = "Ghost ECS task Definition"
+  type = object({
+    network_mode             = string
+    requires_compatibilities = list(string)
+    memory                   = number
+    cpu                      = number
+    family                   = string
+    name                     = string
+    volume_name              = string
+    tags                     = map(string)
   })
 }

@@ -1,15 +1,4 @@
-/* TODO refactor efs traget creation
-
-data "aws_subnets" "cloudx_subnets" {
-  filter {
-    name   = "vpc-id"
-    values = [aws_vpc.cloudx_vpc.id]
-  }
-}
-output "cloudx_aws_subnets_ids" {
-  value = data.aws_subnets.cloudx_subnets.ids
-}
-*/
+# TODO refactor efs traget creation
 
 resource "aws_efs_file_system" "cloudx_ghost_app_efs" {
   tags = merge(var.common_project_tags, var.efs.tags)
@@ -41,7 +30,6 @@ resource "aws_efs_mount_target" "cloudx_ghost_app_efs_target_c" {
   ])
   subnet_id = aws_subnet.cloudx_subnet_public_c.id
 }
-
 
 /* TODO refactor subnets creation and then efs targets:
 resource "aws_efs_mount_target" "cloudx_ghost_app_efs_targets" {

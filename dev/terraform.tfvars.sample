@@ -6,6 +6,15 @@ aws_region_name = ""
 aws_access_key_id = ""
 aws_secret_key = ""
 
+docker_host = ""
+
+docker_registry_auth = {
+  address  = "registry.hub.docker.com"
+  username = ""
+  password = ""
+}
+
+
 #########################################################################
 #                              VPC                                      #
 #########################################################################
@@ -93,6 +102,13 @@ database_private_route_table_tags = {
 }
 
 #########################################################################
+#                           VPC ENDPOINTS                               #
+#########################################################################
+
+
+
+
+#########################################################################
 #                           SECURITY                                    #
 #########################################################################
 
@@ -161,6 +177,22 @@ iam_policy = {
     }
   }
 }
+
+
+iam_ecr_policy = <<-EOF
+{
+    "Version": "2008-10-17",
+    "Statement": [
+        {
+            "Sid": "new policy",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+            ]
+        }
+    ]
+}
+EOF
 
 #------------------------------  IAM ROLE  -----------------------------#
 
@@ -288,18 +320,6 @@ bastion_ec2 = {
 #                                 RDS                                   #
 #########################################################################
 
-ssm_db_password_paramname             = ""
-ssm_db_password_paramname_description = ""
-ssm_db_password_paramname_tags = {
-  "" = ""
-}
-
-ssm_db_user_paramname             = ""
-ssm_db_user_paramname_description = ""
-ssm_db_user_paramname_tags = {
-  "" = ""
-}
-
 ghost_mysql_db_subnet_group = {
   description = ""
   name        = ""
@@ -310,10 +330,11 @@ ghost_mysql_db_subnet_group = {
 
 mysql_db_security_group_name = ""
 
-
-mysql_database_name     = ""
-mysql_database_password = ""
-mysql_database_user     = ""
+rds_creds = {
+  database_name     = ""
+  database_password = ""
+  database_user     = ""
+}
 
 rds_db_instantce_params = {
   allocated_storage = number
@@ -323,5 +344,71 @@ rds_db_instantce_params = {
   instance_class    = ""
   tags = {
     "" = ""
+  }
+}
+
+
+#########################################################################
+#                                 ECR                                   #
+#########################################################################
+ghost_image_name = "ghost"
+
+ghost_image_tag  = "4.12.0"
+
+aws_image_repository = {
+  name                 = "ghost"
+  scan_on_push         = false
+  image_tag_mutability = "IMMUTABLE"
+  encryption_type      = "AES256"
+  tags = {
+    Name = "ghost"
+  }
+}
+
+#########################################################################
+#                                 ECS                                   #
+#########################################################################
+
+ghost_ecs_cluster = {
+  name          = "ghost"
+  setting_name  = "containerInsights"
+  setting_value = "enabled"
+}
+
+ghost_ecs_service = {
+  name                                 = "ghost-fargate-service"
+  launch_type                          = "FARGATE"
+  desired_count                        = 1
+  health_check_grace_period_seconds    = 120
+  wait_for_steady_state                = true
+  load_balancer_container_name         = "ghost_container"
+  load_balancer_container_port         = 2368
+  network_configuration_security_group = "fargate_pool"
+  assign_public_ip                     = true
+}
+
+ghost_ecs_container_def = {
+  name                                   = "ghost_container"
+  essential                              = true
+  environment_database__client           = "mysql"
+  environment_NODE_ENV                   = "development"
+  portMappings_protocol                  = "tcp"
+  portMappings_containerPort             = 2368
+  mountPoints_containerPath              = "/var/lib/ghost/content"
+  mountPoints_sourceVolume               = "ghost_content"
+  logConfiguration_logDriver             = "awslogs"
+  logConfiguration_awslogs-stream-prefix = "application"
+}
+
+ghost_ecs_task_def = {
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  memory                   = 1024
+  cpu                      = 512
+  family                   = "ghost"
+  name                     = "ghost_content"
+  volume_name              = "ghost_content"
+  tags = {
+    Name = "task_def_ghost"
   }
 }

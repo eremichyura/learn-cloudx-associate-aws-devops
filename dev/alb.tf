@@ -27,19 +27,41 @@ resource "aws_lb_target_group" "cloudx_alb_target_group" {
   tags     = merge(var.alb_target_group.tags, var.common_project_tags)
 }
 
-#------------------------  ALB_LISTENER  -------------------------------#
+resource "aws_lb_target_group" "cloudx_ecs" {
+  target_type = "ip"
+  name        = var.alb_target_group_ecs.name
+  port        = var.alb_target_group_ecs.port
+  protocol    = var.alb_target_group_ecs.protocol
+  vpc_id      = aws_vpc.cloudx_vpc.id
+  tags        = merge(var.alb_target_group_ecs.tags, var.common_project_tags)
 
+  slow_start = 60
+  health_check {
+    port     = 2368
+    protocol = "HTTP"
+    path     = "/"
+    interval = 120
+    timeout  = 10
+  }
+}
+
+#------------------------  ALB_LISTENER  -------------------------------#
 
 resource "aws_lb_listener" "cloudx_alb_listener" {
   load_balancer_arn = aws_lb.cloudx_alb.arn
   port              = var.alb_listener.port
   protocol          = var.alb_listener.protocol
   tags              = merge(var.alb_listener.tags, var.common_project_tags)
+
   default_action {
     type = var.alb_listener.default_action_type
     forward {
       target_group {
         arn    = aws_lb_target_group.cloudx_alb_target_group.arn
+        weight = var.alb_listener.default_action_weight
+      }
+      target_group {
+        arn    = aws_lb_target_group.cloudx_ecs.arn
         weight = var.alb_listener.default_action_weight
       }
     }
