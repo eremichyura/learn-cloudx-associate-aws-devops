@@ -12,7 +12,7 @@ resource "docker_image" "cloudx_ghost" {
 
   provisioner "local-exec" {
     command     = <<-EOF
-      docker pull ${var.ghost_image_name}:${var.ghost_image_tag}
+      docker pull ${var.ghost_image_name}:${var.ghost_image_tag}      
       $image_id = docker images -q ${var.ghost_image_name}:${var.ghost_image_tag};
       docker tag $image_id ${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region_name}.amazonaws.com/${var.ghost_image_name}:${var.ghost_image_tag}; 
       docker login --username ${data.aws_ecr_authorization_token.cloudx_ecr_token.user_name} --password ${data.aws_ecr_authorization_token.cloudx_ecr_token.password} ${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region_name}.amazonaws.com;
@@ -51,6 +51,7 @@ resource "aws_ecs_cluster" "cloudx_ghost" {
     name  = var.ghost_ecs_cluster.setting_name
     value = var.ghost_ecs_cluster.setting_value
   }
+  tags = merge(var.common_project_tags)
 }
 
 resource "aws_ecs_service" "cloudx_ghost" {
@@ -86,6 +87,7 @@ resource "aws_ecs_service" "cloudx_ghost" {
     subnets          = aws_subnet.ecs_privates.*.id
     assign_public_ip = var.ghost_ecs_service.assign_public_ip
   }
+  tags = merge(var.common_project_tags)
 }
 
 resource "aws_ecs_task_definition" "cloudx_ghost_task" {
